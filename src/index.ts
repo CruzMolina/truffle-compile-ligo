@@ -1,6 +1,6 @@
 import path from "path";
 import { exec, spawn } from "child_process";
-import fs from "fs";
+import { readFileSync } from "fs";
 
 import colors from "colors";
 import minimatch from "minimatch";
@@ -171,7 +171,7 @@ async function compileAll(options: TruffleConfig, callback: CompileCallback) {
 
         const contractName = basename;
 
-        const sourceBuffer = fs.readFileSync(sourcePath as string);
+        const sourceBuffer = readFileSync(sourcePath as string);
         const sourceContents = sourceBuffer.toString();
 
         const contractDefinition = {
