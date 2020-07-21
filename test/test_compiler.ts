@@ -16,7 +16,7 @@ describe("ligo compiler", () => {
     compile.all(config, (err, contracts, paths) => {
       assert.equal(err, null, "Compiles with an error!");
 
-      paths.forEach(path => {
+      paths!.forEach(path => {
         assert(
           [".ligo", ".mligo", ".religo"].some(
             extension => path.indexOf(extension) !== -1
@@ -73,7 +73,7 @@ describe("ligo compiler", () => {
     compile.all(config, (err, contracts, paths) => {
       assert.equal(err, null, "Compiled with an error");
 
-      paths.forEach(path => {
+      paths!.forEach(path => {
         assert.equal(
           path.indexOf(".sol"),
           -1,
