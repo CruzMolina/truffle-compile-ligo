@@ -1,7 +1,7 @@
-const path = require("path");
-const assert = require("assert");
-const Config = require("@truffle/config");
-const compile = require("../index");
+import path from "path";
+import assert from "assert";
+import Config from "@truffle/config";
+import compile from "../src/index";
 
 describe("ligo compiler", () => {
   const defaultSettings = {
