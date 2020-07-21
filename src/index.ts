@@ -223,4 +223,4 @@ compileLigo.necessary = (options, callback) =>
   compile.necessary(updateContractsDirectory(options), callback);
 
 compile.with_dependencies = compileLigo;
-module.exports = compileLigo;
+export = compileLigo;
