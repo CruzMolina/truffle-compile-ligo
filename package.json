@@ -31,7 +31,6 @@
     "url": "https://github.com/trufflesuite/truffle/issues"
   },
   "devDependencies": {
-    "@types/async": "^3.2.3",
     "@types/minimatch": "^3.0.3",
     "@types/mocha": "^8.0.0",
     "@types/node": "^14.0.24",
@@ -43,7 +42,6 @@
     "@truffle/compile-common": "^0.2.1",
     "@truffle/config": "^1.5.0-tezos.0",
     "@truffle/contract-sources": "^0.4.0-tezos.0",
-    "async": "^3.1.0",
     "colors": "^1.4.0",
     "minimatch": "^3.0.4"
   },

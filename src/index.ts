@@ -2,7 +2,6 @@ import path from "path";
 import { exec, spawn } from "child_process";
 import fs from "fs";
 
-import async from "async";
 import colors from "colors";
 import minimatch from "minimatch";
 
@@ -88,7 +87,8 @@ function checkLigo(callback: CompileCallback) {
 }
 
 // Execute ligo for single source file
-function execLigo(sourcePath: any, entryPoint: string, callback: CompileCallback) {
+function execLigo(sourcePath: any, entryPoint: string) {
+  return new Promise((resolve, reject) => {
   // Note that the first volume parameter passed to docker needs to have a path
   // denoted in the format of of the host filesystem. The latter volume parameter,
   // as well as the entry point, needs to be denoted in the format of the VM.
@@ -134,7 +134,7 @@ function execLigo(sourcePath: any, entryPoint: string, callback: CompileCallback
 
   docker.on("close", code => {
     if (code != 0 || stderr != "") {
-      return callback(
+      reject(
         `${stderr}\n${colors.red(
           `Compilation of ${sourcePath} failed. See above.`
         )}`
@@ -143,23 +143,28 @@ function execLigo(sourcePath: any, entryPoint: string, callback: CompileCallback
 
     const jsonContractOutput = stdout.trim();
 
-    callback(null, jsonContractOutput);
+    resolve(jsonContractOutput);
+  });
   });
 }
 
 // compile all options.paths
-function compileAll(options: TruffleConfig, callback: CompileCallback) {
+async function compileAll(options: TruffleConfig, callback: CompileCallback) {
+  const callbackPassed = typeof callback === "function";
   const entryPoint = options._[0] || "main";
   options.logger = options.logger || console;
 
   compile.display(options.paths, options, entryPoint);
+  let contracts: Array<any> = [];
 
-  async.map(
-    options.paths,
-    (sourcePath, c) => {
-      execLigo(sourcePath, entryPoint, (err, compiledContract) => {
-        if (err) return c(err);
-
+  for (const sourcePath of options.paths) {
+    let compiledContract;
+    try {
+      compiledContract = await execLigo(sourcePath, entryPoint);
+    } catch(error) {
+      if (callbackPassed) return callback(error);
+      throw error;
+    }
         // remove extension from filename
         const extension = path.extname(sourcePath as string);
         const basename = path.basename(sourcePath as string, extension);
@@ -178,21 +183,16 @@ function compileAll(options: TruffleConfig, callback: CompileCallback) {
           compiler
         };
 
-        c(null, contractDefinition);
-      });
-    },
-    (err, contracts) => {
-      if (err) return callback(err);
-
-      const result = contracts!.reduce((result: any, contract: any) => {
+        contracts.push(contractDefinition);
+    }
+      const result = contracts.reduce((result: any, contract: any) => {
         result[contract.contractName] = contract;
 
         return result;
       }, {});
 
-      callback(null, result, options.paths, compiler);
-    }
-  );
+      if (callbackPassed) return callback(null, result, options.paths, compiler);
+      return { result, paths: options.paths, compiler };
 }
 
 // Check that ligo is available then forward to internal compile function
