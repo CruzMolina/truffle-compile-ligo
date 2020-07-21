@@ -8,18 +8,18 @@ describe("ligo compiler", () => {
     contracts_directory: path.join(__dirname, "./sources/"),
     quiet: true,
     all: true,
-    _: []
+    _: [],
   };
   const config = new Config().merge(defaultSettings);
 
-  it("compiles ligo contracts", done => {
+  it("compiles ligo contracts", (done) => {
     compile.all(config, (err, contracts, paths) => {
       assert.equal(err, null, "Compiles with an error!");
 
-      paths!.forEach(path => {
+      paths!.forEach((path) => {
         assert(
           [".ligo", ".mligo", ".religo"].some(
-            extension => path.indexOf(extension) !== -1
+            (extension) => path.indexOf(extension) !== -1
           ),
           "Paths should only be ligo files"
         );
@@ -28,7 +28,7 @@ describe("ligo compiler", () => {
       [
         contracts.LigoContract1,
         contracts.LigoContract2,
-        contracts.LigoContract3
+        contracts.LigoContract3,
       ].forEach((contract, index) => {
         assert.notEqual(
           contract,
@@ -69,11 +69,11 @@ describe("ligo compiler", () => {
     });
   });
 
-  it("skips solidity contracts", done => {
+  it("skips solidity contracts", (done) => {
     compile.all(config, (err, contracts, paths) => {
       assert.equal(err, null, "Compiled with an error");
 
-      paths!.forEach(path => {
+      paths!.forEach((path) => {
         assert.equal(
           path.indexOf(".sol"),
           -1,
@@ -99,7 +99,7 @@ describe("ligo compiler", () => {
       .merge(defaultSettings)
       .merge({ _: ["bad"] });
 
-    it("compiles successfully when passed a valid entry", done => {
+    it("compiles successfully when passed a valid entry", (done) => {
       compile.all(configWithValidEntryPoint, (err, contracts) => {
         assert.equal(err, null, "Compiled with an error!");
         assert(contracts, "Contracts missing!");
@@ -107,7 +107,7 @@ describe("ligo compiler", () => {
       });
     });
 
-    it("errors when passed an invalid entry", done => {
+    it("errors when passed an invalid entry", (done) => {
       compile.all(configWithBadEntryPoint, (err, contracts) => {
         assert(err, "Should not have compiled!");
         assert.equal(contracts, null, "Contracts should be missing!");
