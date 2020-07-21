@@ -8,6 +8,7 @@ import minimatch from "minimatch";
 
 import find_contracts from "@truffle/contract-sources";
 import Profiler from "@truffle/compile-solidity/profiler";
+import TruffleConfig from "@truffle/config";
 
 const compiler = {
   name: "ligo",
@@ -18,13 +19,15 @@ const LIGO_PATTERN = "**/*.{ligo,mligo,religo}";
 
 // -------- TODO: Common with truffle-compile --------
 
+type CompileCallback = (error?: any, result?: any, contractPaths?: Array<string>, _compiler?: typeof compiler) => void;
+
 const compile: any = {};
 
 // contracts_directory: String. Directory where .ligo files can be found.
 // quiet: Boolean. Suppress output. Defaults to false.
 // strict: Boolean. Return compiler warnings as errors. Defaults to false.
-compile.all = (options, callback) => {
-  find_contracts(options.contracts_directory, (err, files) => {
+compile.all = (options: TruffleConfig, callback: CompileCallback) => {
+  find_contracts(options.contracts_directory, (err: Error, files: Array<string>) => {
     if (err) return callback(err);
 
     options.paths = files;
@@ -38,14 +41,14 @@ compile.all = (options, callback) => {
 //      in the build directory to see what needs to be compiled.
 // quiet: Boolean. Suppress output. Defaults to false.
 // strict: Boolean. Return compiler warnings as errors. Defaults to false.
-compile.necessary = (options, callback) => {
+compile.necessary = (options: TruffleConfig, callback: CompileCallback) => {
   options.logger = options.logger || console;
 
-  Profiler.updated(options, (err, updated) => {
+  Profiler.updated(options, (err: Error, updated: Array<string>) => {
     if (err) return callback(err);
 
     if (updated.length === 0 && options.quiet !== true) {
-      return callback(null, [], {});
+      return callback(null, {}, []);
     }
 
     options.paths = updated;
@@ -53,7 +56,7 @@ compile.necessary = (options, callback) => {
   });
 };
 
-compile.display = (paths, { quiet, working_directory, logger }, entryPoint) => {
+compile.display = (paths: Array<string>, { quiet, working_directory, logger }: TruffleConfig, entryPoint: string) => {
   if (quiet !== true) {
     if (!Array.isArray(paths)) {
       paths = Object.keys(paths);
@@ -72,7 +75,7 @@ compile.display = (paths, { quiet, working_directory, logger }, entryPoint) => {
 // -------- End of common with truffle-compile --------
 
 // Check that ligo is available
-function checkLigo(callback) {
+function checkLigo(callback: CompileCallback) {
   exec(
     "docker run --rm -i ligolang/ligo:next --help",
     (err, stdout, stderr) => {
@@ -85,7 +88,7 @@ function checkLigo(callback) {
 }
 
 // Execute ligo for single source file
-function execLigo(sourcePath, entryPoint, callback) {
+function execLigo(sourcePath: any, entryPoint: string, callback: CompileCallback) {
   // Note that the first volume parameter passed to docker needs to have a path
   // denoted in the format of of the host filesystem. The latter volume parameter,
   // as well as the entry point, needs to be denoted in the format of the VM.
@@ -145,7 +148,7 @@ function execLigo(sourcePath, entryPoint, callback) {
 }
 
 // compile all options.paths
-function compileAll(options, callback) {
+function compileAll(options: TruffleConfig, callback: CompileCallback) {
   const entryPoint = options._[0] || "main";
   options.logger = options.logger || console;
 
@@ -153,17 +156,17 @@ function compileAll(options, callback) {
 
   async.map(
     options.paths,
-    (sourcePath: string, c) => {
+    (sourcePath, c) => {
       execLigo(sourcePath, entryPoint, (err, compiledContract) => {
         if (err) return c(err);
 
         // remove extension from filename
-        const extension = path.extname(sourcePath);
-        const basename = path.basename(sourcePath, extension);
+        const extension = path.extname(sourcePath as string);
+        const basename = path.basename(sourcePath as string, extension);
 
         const contractName = basename;
 
-        const sourceBuffer = fs.readFileSync(sourcePath);
+        const sourceBuffer = fs.readFileSync(sourcePath as string);
         const sourceContents = sourceBuffer.toString();
 
         const contractDefinition = {
@@ -181,7 +184,7 @@ function compileAll(options, callback) {
     (err, contracts) => {
       if (err) return callback(err);
 
-      const result = contracts.reduce((result, contract: any) => {
+      const result = contracts!.reduce((result: any, contract: any) => {
         result[contract.contractName] = contract;
 
         return result;
@@ -193,9 +196,9 @@ function compileAll(options, callback) {
 }
 
 // Check that ligo is available then forward to internal compile function
-function compileLigo(options, callback) {
+function compileLigo(options: TruffleConfig, callback: CompileCallback) {
   // filter out non-ligo paths
-  options.paths = options.paths.filter(path => minimatch(path, LIGO_PATTERN));
+  options.paths = options.paths.filter((path: string) => minimatch(path, LIGO_PATTERN));
 
   // no ligo files found, no need to check ligo
   if (options.paths.length === 0) return callback(null, {}, []);
@@ -208,18 +211,18 @@ function compileLigo(options, callback) {
 }
 
 // append .ligo pattern to contracts_directory in options and return updated options
-function updateContractsDirectory(options) {
+function updateContractsDirectory(options: TruffleConfig) {
   return options.with({
     contracts_directory: path.join(options.contracts_directory, LIGO_PATTERN)
   });
 }
 
 // wrapper for compile.all. only updates contracts_directory to find .ligo
-compileLigo.all = (options, callback) =>
+compileLigo.all = (options: TruffleConfig, callback: CompileCallback) =>
   compile.all(updateContractsDirectory(options), callback);
 
 // wrapper for compile.necessary. only updates contracts_directory to find .ligo
-compileLigo.necessary = (options, callback) =>
+compileLigo.necessary = (options: TruffleConfig, callback: CompileCallback) =>
   compile.necessary(updateContractsDirectory(options), callback);
 
 compile.with_dependencies = compileLigo;
