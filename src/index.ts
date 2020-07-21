@@ -1,13 +1,13 @@
-const path = require("path");
-const { exec, spawn } = require("child_process");
-const fs = require("fs");
+import path from "path";
+import { exec, spawn } from "child_process";
+import fs from "fs";
 
-const async = require("async");
-const colors = require("colors");
-const minimatch = require("minimatch");
+import async from "async";
+import colors from "colors";
+import minimatch from "minimatch";
 
-const find_contracts = require("@truffle/contract-sources");
-const Profiler = require("@truffle/compile-solidity/profiler");
+import find_contracts from "@truffle/contract-sources";
+import Profiler from "@truffle/compile-solidity/profiler";
 
 const compiler = {
   name: "ligo",
@@ -18,7 +18,7 @@ const LIGO_PATTERN = "**/*.{ligo,mligo,religo}";
 
 // -------- TODO: Common with truffle-compile --------
 
-const compile = {};
+const compile: any = {};
 
 // contracts_directory: String. Directory where .ligo files can be found.
 // quiet: Boolean. Suppress output. Defaults to false.
@@ -153,7 +153,7 @@ function compileAll(options, callback) {
 
   async.map(
     options.paths,
-    (sourcePath, c) => {
+    (sourcePath: string, c) => {
       execLigo(sourcePath, entryPoint, (err, compiledContract) => {
         if (err) return c(err);
 
@@ -181,7 +181,7 @@ function compileAll(options, callback) {
     (err, contracts) => {
       if (err) return callback(err);
 
-      const result = contracts.reduce((result, contract) => {
+      const result = contracts.reduce((result, contract: any) => {
         result[contract.contractName] = contract;
 
         return result;
