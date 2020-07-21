@@ -7,7 +7,7 @@ import colors from "colors";
 import minimatch from "minimatch";
 
 import find_contracts from "@truffle/contract-sources";
-import Profiler from "@truffle/compile-solidity/profiler";
+import Profiler from "@truffle/compile-common";
 import TruffleConfig from "@truffle/config";
 
 const compiler = {
